@@ -1,62 +1,70 @@
 <template>
   <div id="content" :class="{ nightMode: nightMode }">
-    <nav class="nav-bar">
-      <ul class="nav-bar__list">
-        <li class="nav-bar__list-item" v-for="tab in tabsGroup().get()" :key="tab">
-<!--          <img src="" alt="" class="icon">-->
+    <div class="row w-100">
+      <section class="col-2">
+        <div class="px-3 py-2 mb-2 position-relative zIndex-1">
+          <BaseSearchForm/>
+        </div>
+        <nav class="nav flex-column">
+          <!--<a class="nav-link active" aria-current="page" href="#">Active</a>-->
+          <!--<a class="nav-link" href="#">Link</a>-->
+          <!--<a class="nav-link" href="#">Link</a>-->
+          <!--<a class="nav-link disabled">Disabled</a>-->
 
-          <button class="w-100 p-2 text-center fw-bold text-dark" v-html="tab" @click="tabsGroup(tab).set()"/>
-        </li>
-      </ul>
+          <!--btn-warning will be active state-->
+          <!--<button class="btn btn-warning text-start px-3 py-2 active">Active</button>-->
+          <!--<button class="btn text-start px-3 py-2">Link</button>-->
+          <!--<button class="btn text-start px-3 py-2">Link</button>-->
+          <!--<button class="btn text-start px-3 py-2 disabled">Disabled</button>-->
 
-      <!--      The navbar will slide after "mouseOn"-->
-      <!--      <button class="nav-bar__button-change-bar">-->
-      <!--        <img src="./media/icons/button-arrow.svg" alt="" class="icon">-->
-      <!--      </button>-->
-
-      <div class="form-check form-switch nav-bar__change-bar">
-        <input class="form-check-input"
-               type="checkbox"
-               role="switch"
-               id="flexSwitchCheckDefault"
-               v-model="nightMode">
-      </div>
-    </nav>
-
-    <section class="tabs">
-      <ul class="tabs__list">
-        <li class="tabs__list-item" v-for="tab in getTabsFromDb" :key="tab.id">
-          <a :href="tab.url" class="item-link flex_center"
-             :style="{ background: tab.bgColor || tab.bg || tab.color || '#ffffff'}">
-<!--            <img :src="require(`${tab.bgImage}`)" :alt="`preview-${tab.id}`" class="item-link__preview">-->
-            <span class="w-100 text-center fw-bold text-dark">{{ tab.title || tab.url }}</span>
-          </a>
-
-          <div class="item-controls">
-            <button class="item-controls__button item-controls__button_remove">
-              <img src="./media/icons/plus.svg" alt="icon-plus" class="icon">
-            </button>
-            <button class="item-controls__button item-controls__button_setting">
-              <img src="./media/icons/icon-settings.svg" alt="icon-setting" class="icon">
-            </button>
-          </div>
-        </li>
-
-        <li class="tabs__list-item new-tab" :key="testTabs.length">
-          <button class="new-tab__button">
-            <span class="icon"/>
+          <button :class="['btn text-start px-3 py-2', { 'active btn-warning': group === currentTabsGroup } ]"
+                  v-for="group in tabsGroup().get()"
+                  :key="group"
+                  @click="tabsGroup(group).set()">
+            Group {{ group }}
           </button>
-        </li>
-      </ul>
-    </section>
+        </nav>
+      </section>
 
+      <section class="col-10 p-2">
+        <!--row row-cols-1 row-cols-md-3 g-4-->
+        <div class="row g-4">
+          <div class="col" v-for="tab in getTabsFromDb" :key="tab.id">
+            <!--"text-bg-dark" class needs for black links items else you need to replace it with the "text-dark" class-->
+            <a :href="tab.url"
+               class="card h-100 text-bg-dark"
+               :style="{ background: tab.bgColor || tab.bg || tab.color || '#ffffff'}">
+              <!--Doesn't work but needs to now :src="`chrome.extension.getURL(${tab.bgImage})`"-->
+              <!--<img src="..." class="card-img-top" alt="...">-->
+
+              <div class="card-body">
+                <h5 class="card-title d-flex align-items-center">
+                  <img :src="tab.favicon"
+                       v-if="tab.favicon"
+                       class="width-20 h-50 me-2 shadow"
+                       alt="icon">
+                  {{ tab.title || getTitleFromUrl(tab.url) }}
+                </h5>
+
+                <p class="card-text" v-text="getTitleFromUrl(tab.url)"/>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
 <script>
 import DB from "@/db";
+import BaseSearchForm from "@/components/BaseSearchForm";
 
 export default {
+  components: {
+    BaseSearchForm
+  },
+
   data () {
     return {
       colorCache: [],
@@ -122,7 +130,11 @@ export default {
       return {
         get: () => Object.keys(db),
         set: () => this.currentTabsGroup = currentTab
-      }
+      };
+    },
+
+    getTitleFromUrl (url) {
+      return url.split("/").filter(item => item !== "")[1].trim();
     },
 
     randomColor (id) {
@@ -135,16 +147,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-$nav-bar-width: 114px;
-$tab-grid-x: 4;
-$tab-grid-y: 4;
-
-.flex_center {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
-
 // COMMON
 * {
   margin: 0;
@@ -170,7 +172,23 @@ button {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(180deg, #A7A7A7 0%, rgba(188, 188, 188, 0) 100%);
+  //background: linear-gradient(180deg, #A7A7A7 0%, rgba(188, 188, 188, 0) 100%);
+}
+
+.zIndex {
+  @for $i from 1 through 100 {
+    &-#{$i} {
+      z-index: #{$i};
+    }
+  }
+}
+
+.width {
+  @for $i from 0 through 500 {
+    &-#{$i} {
+      width: #{$i}px;
+    }
+  }
 }
 
 .nightMode {
@@ -178,153 +196,5 @@ button {
   transition: .3s;
 }
 
-// NAVBAR
-.nav-bar {
-  position: absolute;
-  width: $nav-bar-width;
-  height: 100%;
-  background: linear-gradient(180deg, rgba(124, 124, 124, 0) 0%, rgba(0, 0, 0, .3705) .01%);
-  //background: #86b7fe;
-  backdrop-filter: blur(30px);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 
-  &__change-bar {
-    @extend .flex_center;
-    width: 100%;
-    height: 80px;
-
-    .form-check-input {
-      outline: none !important;
-      cursor: pointer;
-
-      &:focus, &:checked {
-        background-color: #ffffff !important;
-        border-color: transparent !important;
-        box-shadow: none !important;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3E%3Ccircle r='3' fill='rgba(0, 0, 0, 0.25)'/%3E%3C/svg%3E");
-      }
-    }
-  }
-
-}
-
-// TABS
-.tabs {
-  width: calc(100% - #{$nav-bar-width});
-  height: 100%;
-  margin-left: $nav-bar-width;
-  overflow: auto;
-
-  &__list {
-    width: 100%;
-    //height: inherit;
-    display: flex;
-    flex-wrap: wrap;
-    overflow-y: auto;
-  }
-
-  &__list-item {
-    width: calc(100% / #{$tab-grid-x});
-    height: 270px;
-    backdrop-filter: blur(14px);
-    overflow: hidden;
-    transition: .3s;
-    box-shadow: 5px 5px 34px -8px rgba(0,0,0,0.3);
-
-    .item-link {
-      width: 100%;
-      height: 100%;
-      display: block;
-      transition: inherit;;
-
-      &__preview {
-        width: inherit;
-        height: inherit;
-      }
-    }
-
-    .item-controls {
-      transition: inherit;
-      visibility: hidden;
-      opacity: 0;
-
-      &__button {
-        position: absolute;
-
-        .icon {
-          width: 30px;
-          height: 30px;
-        }
-
-        &_remove {
-          top: 12px;
-          right: 12px;
-          transform: rotate(45deg);
-        }
-
-        &_setting {
-          bottom: 12px;
-          left: 12px;
-        }
-      }
-    }
-
-    &:hover {
-      .item-link {
-        background: rgba(255, 255, 255, .4);
-        filter: blur(1px);
-      }
-
-      .item-controls {
-        visibility: visible;
-        opacity: 1;
-        transition-delay: .2s;
-      }
-    }
-
-    &.new-tab {
-      //border: 1px solid #B1B1B1;
-      border: none;
-
-      &:hover .icon {
-        transform: rotate(90deg);
-      }
-
-      .new-tab__button {
-        @extend .flex_center;
-        padding: 5px;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-
-        .icon {
-          position: relative;
-          width: 25%;
-          height: 2%;
-          transition: .8s;
-          // filter: contrast(.1);
-        }
-
-        .icon:before, .icon:after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          border-radius: 10px;
-          background: #B1B1B1;
-        }
-
-        .icon:before {
-          transform: rotate(90deg);
-        }
-      }
-
-    }
-  }
-
-}
 </style>
