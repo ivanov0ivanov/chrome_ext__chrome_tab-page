@@ -1,21 +1,35 @@
 <template>
-  <div id="content">
+  <div id="content" :class="{ nightMode: nightMode }">
     <nav class="nav-bar">
       <ul class="nav-bar__list">
-        <li class="nav-bar__list-item">
-          <img src="" alt="" class="icon">
+        <li class="nav-bar__list-item" v-for="tab in tabsGroup().get()" :key="tab">
+<!--          <img src="" alt="" class="icon">-->
+
+          <button class="w-100 p-2 text-center fw-bold text-dark" v-html="tab" @click="tabsGroup(tab).set()"/>
         </li>
       </ul>
-      <button class="nav-bar__button-change-bar">
-        <img src="./media/icons/button-arrow.svg" alt="" class="icon">
-      </button>
+
+      <!--      The navbar will slide after "mouseOn"-->
+      <!--      <button class="nav-bar__button-change-bar">-->
+      <!--        <img src="./media/icons/button-arrow.svg" alt="" class="icon">-->
+      <!--      </button>-->
+
+      <div class="form-check form-switch nav-bar__change-bar">
+        <input class="form-check-input"
+               type="checkbox"
+               role="switch"
+               id="flexSwitchCheckDefault"
+               v-model="nightMode">
+      </div>
     </nav>
 
     <section class="tabs">
       <ul class="tabs__list">
-        <li class="tabs__list-item" v-for="tab in testTabs" :key="tab.id">
-          <a :href="tab.link" class="item-link">
-            <img :src="require(`${tab.preview}`)" :alt="`preview-${tab.id}`" class="item-link__preview">
+        <li class="tabs__list-item" v-for="tab in getTabsFromDb" :key="tab.id">
+          <a :href="tab.url" class="item-link flex_center"
+             :style="{ background: tab.bgColor || tab.bg || tab.color || '#ffffff'}">
+<!--            <img :src="require(`${tab.bgImage}`)" :alt="`preview-${tab.id}`" class="item-link__preview">-->
+            <span class="w-100 text-center fw-bold text-dark">{{ tab.title || tab.url }}</span>
           </a>
 
           <div class="item-controls">
@@ -30,7 +44,7 @@
 
         <li class="tabs__list-item new-tab" :key="testTabs.length">
           <button class="new-tab__button">
-            <img src="./media/icons/plus.svg" alt="icon-plus" class="icon">
+            <span class="icon"/>
           </button>
         </li>
       </ul>
@@ -45,62 +59,91 @@ import DB from "@/db";
 export default {
   data () {
     return {
+      colorCache: [],
+      nightMode: false,
+      currentTabsGroup: "1",
       testTabs: [
+        // {
+        //   id: 540,
+        //   name: "FaceBook",
+        //   description: "some description...",
+        //   url: "https://www.facebook.com/",
+        //   icon: "",
+        //   bgImage: "./media/preview/fb.jpg"
+        // },
         {
           id: 0,
-          name: "FaceBook",
+          title: "FaceBook",
           description: "some description...",
-          link: "https://www.facebook.com/",
+          url: "https://www.facebook.com/",
           icon: "",
-          preview: "./media/preview/fb.jpg"
+          bgImage: "./media/preview/fb.jpg"
         },
         {
           id: 1,
-          name: "YouTube",
+          title: "YouTube",
           description: "some description...",
-          link: "https://www.youtube.com/",
+          url: "https://www.youtube.com/",
           icon: "",
-          preview: "./media/preview/yt.jpg"
+          bgImage: "./media/preview/yt.jpg"
         },
         {
           id: 2,
-          name: "LinkedIn",
+          title: "LinkedIn",
           description: "some description...",
-          link: "https://www.linkedin.com/",
+          url: "https://www.linkedin.com/",
           icon: "",
-          preview: "./media/preview/ld.jpg"
+          bgImage: "./media/preview/ld.jpg"
         },
-        // {
-        //   id: 3,
-        //   name: 'VueJs',
-        //   description: 'some description...',
-        //   link: 'https://vuejs.org/',
-        //   icon: '',
-        //   preview: './media/preview/vj.jpg'
-        // }
+        {
+          id: 3,
+          title: "VueJs",
+          description: "some description...",
+          url: "https://vuejs.org/",
+          icon: "",
+          bgImage: "./media/preview/vj.jpg"
+        }
       ],
     };
   },
 
   computed: {
     getTabsFromDb () {
-      // for (let i in DB) {
-      //
-      //   return DB[i].filter((item, key) => {
-      //     return key !== "style"
-      //   })
-      //
-      // }
-    }
+      return DB[this.currentTabsGroup];
+    },
   },
 
   mounted () {
-    console.log(this.getTabsFromDb);
+    // console.log(this.getTabsFromDb);
+  },
+
+  methods: {
+    tabsGroup (currentTab = "1", db = DB) {
+      return {
+        get: () => Object.keys(db),
+        set: () => this.currentTabsGroup = currentTab
+      }
+    },
+
+    randomColor (id) {
+      const r = () => Math.floor(256 * Math.random());
+
+      return this.colorCache[id] || (this.colorCache[id] = `rgb(${r()}, ${r()}, ${r()}, 1)`);
+    }
   }
 };
 </script>
 
 <style scoped lang="scss">
+$nav-bar-width: 114px;
+$tab-grid-x: 4;
+$tab-grid-y: 4;
+
+.flex_center {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
 
 // COMMON
 * {
@@ -130,51 +173,71 @@ button {
   background: linear-gradient(180deg, #A7A7A7 0%, rgba(188, 188, 188, 0) 100%);
 }
 
+.nightMode {
+  filter: invert(1);
+  transition: .3s;
+}
+
 // NAVBAR
 .nav-bar {
   position: absolute;
-  width: 114px;
+  width: $nav-bar-width;
   height: 100%;
-  background: linear-gradient(180deg, rgba(124, 124, 124, 0) 0%, rgba(0, 0, 0, 0.3705) 0.01%);
+  background: linear-gradient(180deg, rgba(124, 124, 124, 0) 0%, rgba(0, 0, 0, .3705) .01%);
+  //background: #86b7fe;
   backdrop-filter: blur(30px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 
-  &__button-change-bar {
+  &__change-bar {
+    @extend .flex_center;
     width: 100%;
     height: 80px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+
+    .form-check-input {
+      outline: none !important;
+      cursor: pointer;
+
+      &:focus, &:checked {
+        background-color: #ffffff !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3E%3Ccircle r='3' fill='rgba(0, 0, 0, 0.25)'/%3E%3C/svg%3E");
+      }
+    }
   }
+
 }
 
 // TABS
 .tabs {
-  width: 100%;
-  padding-top: 114px;
-  padding-left: 114px;
+  width: calc(100% - #{$nav-bar-width});
+  height: 100%;
+  margin-left: $nav-bar-width;
+  overflow: auto;
 
   &__list {
+    width: 100%;
+    //height: inherit;
     display: flex;
-    justify-content: center;
     flex-wrap: wrap;
+    overflow-y: auto;
   }
 
   &__list-item {
-    width: 412px;
-    height: 275px;
-    margin-right: 15px;
-    margin-bottom: 15px;
+    width: calc(100% / #{$tab-grid-x});
+    height: 270px;
     backdrop-filter: blur(14px);
+    overflow: hidden;
     transition: .3s;
+    box-shadow: 5px 5px 34px -8px rgba(0,0,0,0.3);
 
     .item-link {
-      width: inherit;
-      height: inherit;
+      width: 100%;
+      height: 100%;
       display: block;
-      transition: inherit;
+      transition: inherit;;
 
       &__preview {
         width: inherit;
@@ -210,8 +273,8 @@ button {
 
     &:hover {
       .item-link {
-        background: rgba(255, 255, 255, 0.4);
-        filter: blur(4px);
+        background: rgba(255, 255, 255, .4);
+        filter: blur(1px);
       }
 
       .item-controls {
@@ -222,25 +285,44 @@ button {
     }
 
     &.new-tab {
-      border: 1px solid #B1B1B1;
-
-      .icon {
-        transition: .5s;
-        filter: contrast(0.1);
-      }
+      //border: 1px solid #B1B1B1;
+      border: none;
 
       &:hover .icon {
-        transform: rotate(180deg);
+        transform: rotate(90deg);
       }
 
       .new-tab__button {
-        width: inherit;
-        height: inherit;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        @extend .flex_center;
+        padding: 5px;
+        width: 100%;
+        height: 100%;
         cursor: pointer;
+
+        .icon {
+          position: relative;
+          width: 25%;
+          height: 2%;
+          transition: .8s;
+          // filter: contrast(.1);
+        }
+
+        .icon:before, .icon:after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border-radius: 10px;
+          background: #B1B1B1;
+        }
+
+        .icon:before {
+          transform: rotate(90deg);
+        }
       }
+
     }
   }
 
